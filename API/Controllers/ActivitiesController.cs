@@ -5,6 +5,7 @@ using Application.Activities;
 using Domain;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Design;
 
 namespace API.Controllers
 {
@@ -21,32 +22,67 @@ namespace API.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Activity>>> List()
         {
-            return await _mediator.Send(new List.Query());
+            var result = await _mediator.Send(new List.Query());
+            if (result == null)
+                return NotFound();
+            if (result.IsSuccess && result.Value != null)
+                return Ok(result.Value);
+            if (result.IsSuccess && result.Value == null)
+                return NotFound();
+            return BadRequest(result.Error);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Activity>> Details(Guid id)
+        public async Task<IActionResult> Details(Guid id)
         {
-            return await _mediator.Send(new Details.Query{Id = id});
+            var result =  await _mediator.Send(new Details.Query{Id = id});
+            if (result == null)
+                return NotFound();
+            if (result.IsSuccess && result.Value != null)
+                return Ok(result.Value);
+            if (result.IsSuccess && result.Value == null)
+                return NotFound();
+            return BadRequest(result.Error);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Unit>> Create(Create.Command command)
+        public async Task<IActionResult> CreateActivity(Activity activity)
         {
-            return await _mediator.Send(command);
+            var result = await _mediator.Send(new Create.Command {Activity = activity});
+            if (result == null)
+                return NotFound();
+            if (result.IsSuccess && result.Value != null)
+                return Ok(result.Value);
+            if (result.IsSuccess && result.Value == null)
+                return NotFound();
+            return BadRequest(result.Error);
         }
 
         [HttpPut("{id}")]
         public async Task<ActionResult<Unit>> Edit(Guid id, Activity activity)
         {
             activity.Id = id;
-            return Ok(await _mediator.Send(new Edit.Command{Activity = activity}));
+            var result = await _mediator.Send(new Edit.Command{Activity = activity});
+            if (result == null)
+                return NotFound();
+            if (result.IsSuccess && result.Value != null)
+                return Ok(result.Value);
+            if (result.IsSuccess && result.Value == null)
+                return NotFound();
+            return BadRequest(result.Error);
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult<Unit>> Delete(Guid id)
         {
-            return await _mediator.Send(new Delete.Command{Id = id});
+            var result = await _mediator.Send(new Delete.Command{Id = id});
+            if (result == null)
+                return NotFound();
+            if (result.IsSuccess && result.Value != null)
+                return Ok(result.Value);
+            if (result.IsSuccess && result.Value == null)
+                return NotFound();
+            return BadRequest(result.Error);
         }
     }
 }

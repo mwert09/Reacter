@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Core;
 using MediatR;
 using Persistence;
 
@@ -8,29 +9,32 @@ namespace Application.Activities
 {
     public class Delete
     {
-        public class Command : IRequest
+        public class Command : IRequest<Result<Unit>>
         {
             public Guid Id { get; set; }
         }
 
-        public class Handler : IRequestHandler<Delete.Command>
+        public class Handler : IRequestHandler<Delete.Command, Result<Unit>>
         {
             public readonly DataContext _context;
             public Handler(DataContext context)
             {
                 _context = context;
             }
-            public async Task<Unit> Handle(Delete.Command request, CancellationToken cancellationToken)
+            public async Task<Result<Unit>> Handle(Delete.Command request, CancellationToken cancellationToken)
             {
                 var activity = await _context.Activities.FindAsync(request.Id);
-                if (activity == null)
-                    throw new Exception("Could not find activity");
+               /* if (activity == null)
+                    return null;*/
 
                 _context.Remove(activity);
 
                 var success = await _context.SaveChangesAsync() > 0;
-                if (success) return Unit.Value;
-                throw new Exception("Problem saving changes");
+                if (success) return Result<Unit>.Success(Unit.Value);
+                else
+                {
+                    return Result<Unit>.Failure("Failed to delete activity");
+                }
             }
         }
     }

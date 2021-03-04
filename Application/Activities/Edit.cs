@@ -2,20 +2,30 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Core;
 using AutoMapper;
 using Domain;
+using FluentValidation;
 using Persistence;
 
 namespace Application.Activities
 {
     public class Edit
     {
-        public class Command : IRequest
+        public class Command : IRequest<Result<Unit>>
         {
             public Activity Activity { get; set; }
         }
 
-        public class Handler : IRequestHandler<Command>
+        public class CommandValidator : AbstractValidator<Command>
+        {
+            public CommandValidator()
+            {
+                RuleFor(x => x.Activity).SetValidator(new ActivityValidator());
+            }
+        }
+
+        public class Handler : IRequestHandler<Command, Result<Unit>>
         {
             public readonly DataContext _context;
             public readonly IMapper _mapper;
@@ -25,16 +35,20 @@ namespace Application.Activities
                 _context = context;
                 _mapper = mapper;
             }
-            public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
                 var activity = await _context.Activities.FindAsync(request.Activity.Id);
-                _mapper.Map(request.Activity, activity);
                 if (activity == null)
-                    throw new Exception("Could not find activity");
-
+                    return null;
+                _mapper.Map(request.Activity, activity);
+                
                 var success = await _context.SaveChangesAsync() > 0;
-                if (success) return Unit.Value;
-                throw new Exception("Problem saving changes");
+                if (success) 
+                    return Result<Unit>.Success(Unit.Value);
+                else
+                {
+                    return Result<Unit>.Failure("Failed to update activity");
+                }
             }
         }
     }
