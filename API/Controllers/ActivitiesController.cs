@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 using Application.Activities;
 using Domain;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
+    [AllowAnonymous]
     [Microsoft.AspNetCore.Mvc.Route("api/[controller]")]
     [ApiController]
     public class ActivitiesController : ControllerBase
